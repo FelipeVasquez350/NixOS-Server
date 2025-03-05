@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ lib, config, ... }:
 {
   disko.devices = {
     disk.main = {
@@ -8,7 +8,7 @@
         type = "gpt";
         partitions = {
           boot = {
-            name = "boot";
+            name = "ESP";
             size = "512M";
             type = "EF00";
             content = {

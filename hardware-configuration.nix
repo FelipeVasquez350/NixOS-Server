@@ -8,39 +8,45 @@
     [ (modulesPath + "/profiles/qemu-guest.nix")
     ];
 
-  boot.initrd.availableKernelModules = [ "ata_piix" "xhci_pci" "ahci" "sd_mod" ];
+  boot.initrd.availableKernelModules = [ "ata_piix" "xhci_pci" "ahci" "sd_mod" "sr_mod" ];
   boot.initrd.kernelModules = [ ];
   boot.kernelModules = [ ];
   boot.extraModulePackages = [ ];
 
   fileSystems."/" =
-    { device = "/dev/disk/by-uuid/77c45d15-3b46-46e7-adee-2fc55f4094bc";
+    { device = "/dev/disk/by-uuid/608ee798-000e-4b16-ac1f-cae05528d112";
       fsType = "btrfs";
       options = [ "subvol=root" ];
     };
 
   fileSystems."/nix" =
-    { device = "/dev/disk/by-uuid/77c45d15-3b46-46e7-adee-2fc55f4094bc";
+    { device = "/dev/disk/by-uuid/608ee798-000e-4b16-ac1f-cae05528d112";
       fsType = "btrfs";
       options = [ "subvol=nix" ];
     };
 
   fileSystems."/var" =
-    { device = "/dev/disk/by-uuid/77c45d15-3b46-46e7-adee-2fc55f4094bc";
+    { device = "/dev/disk/by-uuid/608ee798-000e-4b16-ac1f-cae05528d112";
       fsType = "btrfs";
       options = [ "subvol=var" ];
     };
 
   fileSystems."/home" =
-    { device = "/dev/disk/by-uuid/77c45d15-3b46-46e7-adee-2fc55f4094bc";
+    { device = "/dev/disk/by-uuid/608ee798-000e-4b16-ac1f-cae05528d112";
       fsType = "btrfs";
       options = [ "subvol=home" ];
     };
 
   fileSystems."/boot" =
-    { device = "/dev/disk/by-uuid/1B2D-0C7E";
+    { device = "/dev/disk/by-uuid/1502-2E7C";
       fsType = "vfat";
       options = [ "fmask=0077" "dmask=0077" ];
+    };
+
+  fileSystems."/var/lib/docker/btrfs" =
+    { device = "/home/var/lib/docker/btrfs";
+      fsType = "none";
+      options = [ "bind" ];
     };
 
   swapDevices = [ ];
@@ -50,8 +56,15 @@
   # still possible to use this option, but it's recommended to use it in conjunction
   # with explicit per-interface declarations with `networking.interfaces.<interface>.useDHCP`.
   networking.useDHCP = lib.mkDefault true;
+  # networking.interfaces.br-85cff2f5d941.useDHCP = lib.mkDefault true;
   # networking.interfaces.docker0.useDHCP = lib.mkDefault true;
+  # networking.interfaces.docker_gwbridge.useDHCP = lib.mkDefault true;
   # networking.interfaces.ens3.useDHCP = lib.mkDefault true;
+  # networking.interfaces.veth547dbe3.useDHCP = lib.mkDefault true;
+  # networking.interfaces.vethb047244.useDHCP = lib.mkDefault true;
+  # networking.interfaces.vethb5ba083.useDHCP = lib.mkDefault true;
+  # networking.interfaces.vethc4ce598.useDHCP = lib.mkDefault true;
+  # networking.interfaces.vethde0c752.useDHCP = lib.mkDefault true;
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 }
