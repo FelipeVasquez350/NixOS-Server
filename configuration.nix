@@ -54,10 +54,8 @@
         443   # HTTPS
         2377  # Cluster management communications
         4789  # Overlay network traffic
-        6001  # Websocket for Coolify
-        6002  # Terminalo for Coolify
+        3000  # Dokploy
         7946  # Container network discovery
-        9000  # Needed by Coolify but idk why
       ];
       allowedUDPPorts = [
         4789  # Overlay network traffic
@@ -102,14 +100,14 @@
     description = "admin";
     extraGroups = [ "networkmanager" "wheel" "docker" ];
     shell = pkgs.zsh;
-    hashedPassword = "$6$M4mfMkIbsR/brcBr$R4W.rNN.c8YSpmwHvv73lcM/r.3.EOZV/EwfblUuaQCDkUb5Ez9yT4EK1yeD60l3b1ZqxQwsMx4P5WOEb2yhM/";
+    hashedPassword = "$6$5gYC2ZrWG.OHl0q4$DvISykmVofwrst9BBtFPw3wDFPBa0marCybZMP42a4YJIJGCCL9c4WLM56Pv1.5V1oO5/8eLRwyVtV3aO1pxk1";
     openssh.authorizedKeys.keys = [
       "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDAqgfcNv5MLfj2+2f7UGB7yu4d7NwPNxxNdINwOATFGzW+w15yOimWneGbUKaAX+YV9fyebpX7CinsvEbHIyQVMw32e6CEW9lDtFtlTQLIYbKYglIDgaris1hZxkvYKUG3FgFYxDqG5yKVB9G3/uPBl8CAMAmYBPu2d+YGqmVw/NT31kWqfbBFyIsQq/PdxP1S0kx9ng1GfCVsfqTGJ9SNZIp2jTFHnIckp7hajJSDzucNVygfHApkQrA4jJ9RSzDZ/XWtlK3XFf0WE5qqsW6qhkJ47BI438vhYXz8y8b9X7qqGwoMIzY3Z+uS6/kVgvUXiHlslB8Xt1WzW2mFi7yH29gzThwqm5A/Noo6W7K++FBaMWZBkSO7naw02b/SRtyjeiiwkvsNv4+Iwyiwr/DCinz6IgngRvLEkOJcMCQ0Mert/VH8VK8AANqKrSmREQM8164gQHFyavOz7c2GGDOyWbIv9lWXjvjN5jxlFw8IErWMnqv/TqIo998yykeEGTE="
     ];
   };
 
   users.users.root = {
-    hashedPassword = "$6$M4mfMkIbsR/brcBr$R4W.rNN.c8YSpmwHvv73lcM/r.3.EOZV/EwfblUuaQCDkUb5Ez9yT4EK1yeD60l3b1ZqxQwsMx4P5WOEb2yhM/";
+    hashedPassword = "$6$5gYC2ZrWG.OHl0q4$DvISykmVofwrst9BBtFPw3wDFPBa0marCybZMP42a4YJIJGCCL9c4WLM56Pv1.5V1oO5/8eLRwyVtV3aO1pxk1";
     openssh.authorizedKeys.keys = [
       "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDAqgfcNv5MLfj2+2f7UGB7yu4d7NwPNxxNdINwOATFGzW+w15yOimWneGbUKaAX+YV9fyebpX7CinsvEbHIyQVMw32e6CEW9lDtFtlTQLIYbKYglIDgaris1hZxkvYKUG3FgFYxDqG5yKVB9G3/uPBl8CAMAmYBPu2d+YGqmVw/NT31kWqfbBFyIsQq/PdxP1S0kx9ng1GfCVsfqTGJ9SNZIp2jTFHnIckp7hajJSDzucNVygfHApkQrA4jJ9RSzDZ/XWtlK3XFf0WE5qqsW6qhkJ47BI438vhYXz8y8b9X7qqGwoMIzY3Z+uS6/kVgvUXiHlslB8Xt1WzW2mFi7yH29gzThwqm5A/Noo6W7K++FBaMWZBkSO7naw02b/SRtyjeiiwkvsNv4+Iwyiwr/DCinz6IgngRvLEkOJcMCQ0Mert/VH8VK8AANqKrSmREQM8164gQHFyavOz7c2GGDOyWbIv9lWXjvjN5jxlFw8IErWMnqv/TqIo998yykeEGTE="
     ];
@@ -184,84 +182,46 @@
       '';
     };
 
-    coolify-setup = {
-      description = "Setup Coolify";
+    dokploy-setup = {
+      description = "Setup Dokploy";
       requires = [ "docker-swarm-init.service" ];
       after = [ "docker-swarm-init.service" ];
       wantedBy = [ "multi-user.target" ];
 
-      path = [ pkgs.docker pkgs.curl pkgs.openssl ];
+      path = [ pkgs.docker ];
+      # Use mkForce to override default PATH setting
       environment = {
-        "PATH" = lib.mkForce "${pkgs.docker}/bin:${pkgs.curl}/bin:${pkgs.openssl}/bin:${pkgs.coreutils}/bin:/run/current-system/sw/bin";
+        "PATH" = lib.mkForce "${pkgs.docker}/bin:${pkgs.coreutils}/bin:/run/current-system/sw/bin";
       };
 
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = true;
       };
-
       script = ''
-        # Make ssh directory if it doesn't exist
-        mkdir -p ~/.ssh
-        chmod 700 ~/.ssh
+      # Create dokploy network if it doesn't exist
+      if ! docker network ls | grep -q dokploy-network; then
+        docker network create --driver overlay --attachable dokploy-network
+      fi
 
-        # Create coolify network first - make sure it exists before we try to use it
-        if ! docker network ls | grep -q coolify; then
-        docker network create --attachable coolify
-        fi
+      # Create dokploy directory
+      mkdir -p /etc/dokploy
+      chmod 777 /etc/dokploy
 
-        # Create base directories for Coolify
-        mkdir -p /data/coolify/{source,ssh,applications,databases,backups,services,proxy,webhooks-during-maintenance}
-        mkdir -p /data/coolify/ssh/{keys,mux}
-        mkdir -p /data/coolify/proxy/dynamic
-
-        # Generate SSH key for Coolify to manage server if it doesn't exist
-        if [ ! -f /data/coolify/ssh/keys/id.root@host.docker.internal ]; then
-          ssh-keygen -f /data/coolify/ssh/keys/id.root@host.docker.internal -t ed25519 -N "" -C root@coolify
-          # Add the public key to authorized_keys
-          cat /data/coolify/ssh/keys/id.root@host.docker.internal.pub >> ~/.ssh/authorized_keys
-          chmod 600 ~/.ssh/authorized_keys
-        fi
-
-        # Download configuration files if they don't exist
-        if [ ! -f /data/coolify/source/docker-compose.yml ]; then
-          curl -fsSL https://cdn.coollabs.io/coolify/docker-compose.yml -o /data/coolify/source/docker-compose.yml
-        fi
-
-        if [ ! -f /data/coolify/source/docker-compose.prod.yml ]; then
-          curl -fsSL https://cdn.coollabs.io/coolify/docker-compose.prod.yml -o /data/coolify/source/docker-compose.prod.yml
-        fi
-
-        if [ ! -f /data/coolify/source/.env ]; then
-          curl -fsSL https://cdn.coollabs.io/coolify/.env.production -o /data/coolify/source/.env
-
-          # Generate secure random values for .env file
-          sed -i "s|APP_ID=.*|APP_ID=$(openssl rand -hex 16)|g" /data/coolify/source/.env
-          sed -i "s|APP_KEY=.*|APP_KEY=base64:$(openssl rand -base64 32)|g" /data/coolify/source/.env
-          sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=$(openssl rand -base64 32)|g" /data/coolify/source/.env
-          sed -i "s|REDIS_PASSWORD=.*|REDIS_PASSWORD=$(openssl rand -base64 32)|g" /data/coolify/source/.env
-          sed -i "s|PUSHER_APP_ID=.*|PUSHER_APP_ID=$(openssl rand -hex 32)|g" /data/coolify/source/.env
-          sed -i "s|PUSHER_APP_KEY=.*|PUSHER_APP_KEY=$(openssl rand -hex 32)|g" /data/coolify/source/.env
-          sed -i "s|PUSHER_APP_SECRET=.*|PUSHER_APP_SECRET=$(openssl rand -hex 32)|g" /data/coolify/source/.env
-        fi
-
-        if [ ! -f /data/coolify/source/upgrade.sh ]; then
-          curl -fsSL https://cdn.coollabs.io/coolify/upgrade.sh -o /data/coolify/source/upgrade.sh
-        fi
-
-        # Set proper permissions
-        chown -R 9999:root /data/coolify
-        chmod -R 700 /data/coolify
-
-        # Start Coolify if not already running
-        if ! docker ps | grep -q coolify-api; then
-          cd /data/coolify/source && \
-          docker compose --env-file /data/coolify/source/.env \
-            -f /data/coolify/source/docker-compose.yml \
-            -f /data/coolify/source/docker-compose.prod.yml \
-            up -d --pull always --remove-orphans --force-recreate
-        fi
-      '';
+      # Deploy dokploy service if it doesn't exist
+      if ! docker service ls | grep -q dokploy; then
+        docker service create \
+          --name dokploy \
+          --replicas 1 \
+          --network dokploy-network \
+          --mount type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock \
+          --mount type=bind,source=/etc/dokploy,target=/etc/dokploy \
+          --publish published=3000,target=3000,mode=host \
+          --update-parallelism 1 \
+          --update-order stop-first \
+          dokploy/dokploy:latest
+      fi
+    '';
     };
   };
 
@@ -274,22 +234,16 @@
 
   # Enable automatic login for the user.
   services = {
-    getty = {
-      autologinUser = "admin";
-      helpLine = "";
-      extraArgs = [ "--noclear" ];
-    };
-
     # Enable the OpenSSH daemon.
     openssh= {
       enable = true;
       ports = [ 22 ];
       settings = {
-        # PasswordAuthentication = false;
         AllowUsers = null; # Allows all users by default.
         UseDns = true;
         X11Forwarding = false;
-        # PermitRootLogin = "prohibit-password";
+        PasswordAuthentication = false;
+        PermitRootLogin = "prohibit-password";
       };
     };
 
@@ -345,18 +299,28 @@
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
-  environment.systemPackages = with pkgs; [
-    curl
-    fastfetch
-    fzf
-    git
-    htop
-    nmap
-    stow
-    vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
-    wget
-    zoxide
-  ];
+  environment = {
+    systemPackages = with pkgs; [
+      btop
+      curl
+      fastfetch
+      fzf
+      git
+      htop
+      nmap
+      stow
+      vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
+      wget
+      zoxide
+    ];
+
+    variables = {
+      PATH = [
+        "/usr/bin"
+        "$PATH"
+      ];
+    };
+  };
 
   system.stateVersion = "24.11";
 }

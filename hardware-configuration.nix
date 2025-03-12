@@ -14,31 +14,31 @@
   boot.extraModulePackages = [ ];
 
   fileSystems."/" =
-    { device = "/dev/disk/by-uuid/608ee798-000e-4b16-ac1f-cae05528d112";
+    { device = "/dev/disk/by-uuid/618288f4-86f2-40a6-98c8-c072464ceb86";
       fsType = "btrfs";
       options = [ "subvol=root" ];
     };
 
   fileSystems."/nix" =
-    { device = "/dev/disk/by-uuid/608ee798-000e-4b16-ac1f-cae05528d112";
+    { device = "/dev/disk/by-uuid/618288f4-86f2-40a6-98c8-c072464ceb86";
       fsType = "btrfs";
       options = [ "subvol=nix" ];
     };
 
   fileSystems."/var" =
-    { device = "/dev/disk/by-uuid/608ee798-000e-4b16-ac1f-cae05528d112";
+    { device = "/dev/disk/by-uuid/618288f4-86f2-40a6-98c8-c072464ceb86";
       fsType = "btrfs";
       options = [ "subvol=var" ];
     };
 
   fileSystems."/home" =
-    { device = "/dev/disk/by-uuid/608ee798-000e-4b16-ac1f-cae05528d112";
+    { device = "/dev/disk/by-uuid/618288f4-86f2-40a6-98c8-c072464ceb86";
       fsType = "btrfs";
       options = [ "subvol=home" ];
     };
 
   fileSystems."/boot" =
-    { device = "/dev/disk/by-uuid/1502-2E7C";
+    { device = "/dev/disk/by-uuid/2CC4-0E47";
       fsType = "vfat";
       options = [ "fmask=0077" "dmask=0077" ];
     };
@@ -56,15 +56,6 @@
   # still possible to use this option, but it's recommended to use it in conjunction
   # with explicit per-interface declarations with `networking.interfaces.<interface>.useDHCP`.
   networking.useDHCP = lib.mkDefault true;
-  # networking.interfaces.br-85cff2f5d941.useDHCP = lib.mkDefault true;
-  # networking.interfaces.docker0.useDHCP = lib.mkDefault true;
-  # networking.interfaces.docker_gwbridge.useDHCP = lib.mkDefault true;
-  # networking.interfaces.ens3.useDHCP = lib.mkDefault true;
-  # networking.interfaces.veth547dbe3.useDHCP = lib.mkDefault true;
-  # networking.interfaces.vethb047244.useDHCP = lib.mkDefault true;
-  # networking.interfaces.vethb5ba083.useDHCP = lib.mkDefault true;
-  # networking.interfaces.vethc4ce598.useDHCP = lib.mkDefault true;
-  # networking.interfaces.vethde0c752.useDHCP = lib.mkDefault true;
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 }
