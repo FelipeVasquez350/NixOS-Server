@@ -1,0 +1,23 @@
+[server]
+bind_addr = "0.0.0.0:5000"
+default_token = "insert-token-from-sops-nix-here"
+
+[server.services.generic]
+nodelay = true
+bind_addr = "0.0.0.0:7777"
+type = "tcp"
+
+[server.services.factorio-tcp]
+nodelay = true
+bind_addr = "0.0.0.0:27015"
+type = "tcp"
+
+[server.services.factorio-udp]
+nodelay = true
+bind_addr = "0.0.0.0:34197"
+type = "udp"
+
+[server.services.minecraft]
+nodelay = true
+bind_addr = "0.0.0.0:25535"
+type = "tcp"

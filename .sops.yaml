@@ -1,0 +1,9 @@
+keys:
+  - &felipe350 age16mj2eevjh3mglx0z8vxfwvkxava2cvgyfrwakde6ckuvw0aptfdsgxx02c
+  - &zimablade age1kn03l7e8y05prhd2sfjkwn5kx9kamkmc9kfg0kg33pmguc8cay3qyyqh82
+creation_rules:
+  - path_regex: hosts/.*/secrets\.yaml$
+    key_groups:
+      - age:
+          - *felipe350
+          - *zimablade
