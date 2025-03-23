@@ -22,6 +22,8 @@ in
           "5000:5000"   # Control channel (from your config)
           "7777:7777"   # Generic
           "25535:25535" # Minecraft
+          "27015:27015" # Factorio TCP
+          "34197:34197" # Factorio UDP
         ];
       };
     };
@@ -69,6 +71,8 @@ in
       5000   # Rathole control channel
       7777   # Generic port
       25535  # Minecraft port
+      27015  # Factorio TCP port
+      34197  # Factorio UDP port
     ];
   };
 }
