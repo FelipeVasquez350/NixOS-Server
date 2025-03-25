@@ -318,6 +318,7 @@
   imports = [
     ./services/rathole.nix
     ./services/wireguard.nix
+    ./services/cloudflared.nix
   ];
 
   # Important: Version marker
