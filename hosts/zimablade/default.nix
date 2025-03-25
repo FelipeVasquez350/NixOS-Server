@@ -60,7 +60,7 @@
 
     # Use systemd-networkd (lighter than NetworkManager)
     useNetworkd = true;
-    useDHCP = false;
+    useDHCP = true;
 
     nameservers = [ "8.8.8.8" "8.8.4.4" ];
 
@@ -79,55 +79,23 @@
   };
 
   systemd.network = {
-    # Enable networkd explicitly
     enable = true;
 
-    # Home network configuration
-    networks."10-home" = {
+    # Universal DHCP fallback for your primary interface
+    networks."10-dhcp" = {
       matchConfig = {
-        Name = "enp2s0";
-        Gateway = "192.168.178.1";
-      };
-      networkConfig = {
-        DHCP = "no";
-      };
-      addresses = [{
-        Address = "192.168.178.222/24";
-      }];
-      routes = [{
-          Gateway = "192.168.178.1";
-          Destination = "0.0.0.0/0";
-
-      }];
-    };
-
-    # Work network configuration
-    networks."20-work" = {
-      matchConfig = {
-        Name = "enp2s0";
-        Gateway = "192.168.1.1";
-      };
-      networkConfig = {
-        DHCP = "no";
-      };
-      addresses = [{
-        addressConfig.Address = "192.168.1.222/24";
-      }];
-      routes = [{
-
-          Gateway = "192.168.1.1";
-          Destination = "0.0.0.0/0";
-
-      }];
-    };
-
-    # Fallback configuration (DHCP) in case neither matches
-    networks."30-fallback" = {
-      matchConfig = {
-        Name = "enp2s0";
+        Name = "enp2s0";  # Your ethernet interface
       };
       networkConfig = {
         DHCP = "yes";
+        # Let DHCP set everything including gateway
+        # No static addressing
+      };
+      # Use these if you need DHCP to behave in specific ways
+      dhcpV4Config = {
+        UseDNS = true;
+        UseRoutes = true;  # Let DHCP provide the routes
+        SendHostname = true;
       };
     };
   };
@@ -219,7 +187,7 @@
       };
       # Hardening
       extraConfig = ''
-        AllowTcpForwarding no
+        AllowTcpForwarding yes
         ClientAliveCountMax 2
         Compression no
         MaxAuthTries 3
