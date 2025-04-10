@@ -52,6 +52,8 @@
     enable = true;
     algorithm = "zstd";
     memoryPercent = 50;
+    priority = 100;
+    swapDevices = 1;
   };
 
   # Network configuration
@@ -171,6 +173,8 @@
 
       # Default to overlayfs storage for better efficiency
       defaultNetwork.settings.driver = "bridge";
+
+      extraPackages = [ pkgs.cni-plugins ];
     };
   };
 
@@ -319,6 +323,7 @@
     ./services/rathole.nix
     ./services/wireguard.nix
     ./services/cloudflared.nix
+    ../../modules/monitoring.nix
   ];
 
   # Important: Version marker
