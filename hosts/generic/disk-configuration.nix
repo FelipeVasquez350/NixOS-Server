@@ -1,14 +1,24 @@
-{ lib, config, ... }:
-{
+{ lib, config, ... }: {
+
+  # Enable automatic partition resizing for VM environments
+  # This will grow the root partition to fill available space
+  boot.growPartition = true;
+  
+  # File system-specific auto-resize configuration
+  fileSystems."/".autoResize = true;
+  fileSystems."/home".autoResize = true;
+  fileSystems."/nix".autoResize = true;
+  fileSystems."/var".autoResize = true;
+
   disko.devices = {
     disk.main = {
-      device = lib.mkDefault "/dev/sda";
+      device = lib.mkDefault "/dev/vda";
       type = "disk";
       content = {
         type = "gpt";
         partitions = {
           boot = {
-            name = "ESP";
+            name = "boot"; # Explicitly name the boot partition
             size = "512M";
             type = "EF00";
             content = {
@@ -20,27 +30,31 @@
           };
 
           root = {
-            name = "root";
+            name = "nixos"; # This creates disk-main-nixos partition label
             size = "100%";
             content = {
               type = "btrfs";
-              extraArgs = [ "-f" ]; # Force formatting
+              extraArgs = [
+                "-f" # Force formatting
+                "-L"
+                "nixos_vm_root"
+              ]; # Set filesystem label
               subvolumes = {
-                "/root" = {
+                "/@" = {
                   mountpoint = "/";
-                  mountOptions = ["compress=zstd" "noatime" "space_cache=v2"];
+                  mountOptions = [ "compress=zstd" "noatime" "space_cache=v2" ];
                 };
-                "/home" = {
+                "/@home" = {
                   mountpoint = "/home";
-                  mountOptions = ["compress=zstd" "noatime" "space_cache=v2"];
+                  mountOptions = [ "compress=zstd" "noatime" "space_cache=v2" ];
                 };
-                "/nix" = {
+                "/@nix" = {
                   mountpoint = "/nix";
-                  mountOptions = ["compress=zstd" "noatime" "space_cache=v2"];
+                  mountOptions = [ "compress=zstd" "noatime" "space_cache=v2" ];
                 };
-                "/var" = {
+                "/@var" = {
                   mountpoint = "/var";
-                  mountOptions = ["compress=zstd" "noatime" "space_cache=v2"];
+                  mountOptions = [ "compress=zstd" "noatime" "space_cache=v2" ];
                 };
               };
             };
@@ -49,4 +63,5 @@
       };
     };
   };
+
 }

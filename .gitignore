@@ -1,0 +1,7 @@
+result
+build
+*.tfvars
+.terraform
+.terraform.lock.hcl
+*.log
+*.raw

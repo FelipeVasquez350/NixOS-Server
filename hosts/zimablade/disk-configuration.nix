@@ -1,5 +1,20 @@
-{ lib, ... }:
+{ config, lib, modulesPath, ... }:
 {
+  imports =
+    [ (modulesPath + "/installer/scan/not-detected.nix")
+    ];
+
+  # Hardware-specific modules from the hardware-configuration.nix
+  boot.initrd.availableKernelModules = [ "ahci" "xhci_pci" "sdhci_pci" ];
+  boot.initrd.kernelModules = [ ];
+  boot.kernelModules = [ "kvm-intel" ];
+  boot.extraModulePackages = [ ];
+
+  # CPU-specific settings
+  nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
+  hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+
+  # Disko configuration
   disko.devices = {
     disk.main = {
       device = lib.mkDefault "/dev/mmcblk0";
@@ -15,7 +30,7 @@
               type = "filesystem";
               format = "vfat";
               mountpoint = "/boot";
-              mountOptions = [ "defaults" "noatime" ];
+              mountOptions = [ "defaults" "noatime" "fmask=0022" "dmask=0022" ];
             };
           };
 
@@ -34,4 +49,7 @@
       };
     };
   };
+
+  # No swap devices
+  swapDevices = [ ];
 }

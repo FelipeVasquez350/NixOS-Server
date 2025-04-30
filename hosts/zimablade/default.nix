@@ -6,8 +6,8 @@
     loader = {
       systemd-boot = {
         enable = true;
-        configurationLimit = 2;  # Extremely limited generations
-        editor = false;  # Disable boot editing for security
+        configurationLimit = 2; # Extremely limited generations
+        editor = false; # Disable boot editing for security
       };
       efi.canTouchEfiVariables = true;
     };
@@ -28,8 +28,15 @@
     initrd = {
       includeDefaultModules = false;
       availableKernelModules = [
-        "ata_piix" "uhci_hcd" "virtio_pci" "virtio_scsi"
-        "sd_mod" "sr_mod" "mmc_block" "sdhci" "sdhci_pci"
+        "ata_piix"
+        "uhci_hcd"
+        "virtio_pci"
+        "virtio_scsi"
+        "sd_mod"
+        "sr_mod"
+        "mmc_block"
+        "sdhci"
+        "sdhci_pci"
       ];
       kernelModules = [ "mmc_block" ];
     };
@@ -70,10 +77,10 @@
     firewall = {
       enable = true;
       allowedTCPPorts = [
-        22    # SSH
-        80    # HTTP
-        443   # HTTPS
-        3000  # App service (if needed)
+        22 # SSH
+        80 # HTTP
+        443 # HTTPS
+        3000 # App service (if needed)
       ];
       # Log dropped packets for security visibility
       logRefusedConnections = true;
@@ -86,7 +93,7 @@
     # Universal DHCP fallback for your primary interface
     networks."10-dhcp" = {
       matchConfig = {
-        Name = "enp2s0";  # Your ethernet interface
+        Name = "enp2s0"; # Your ethernet interface
       };
       networkConfig = {
         DHCP = "yes";
@@ -96,7 +103,7 @@
       # Use these if you need DHCP to behave in specific ways
       dhcpV4Config = {
         UseDNS = true;
-        UseRoutes = true;  # Let DHCP provide the routes
+        UseRoutes = true; # Let DHCP provide the routes
         SendHostname = true;
       };
     };
@@ -106,10 +113,7 @@
   time.timeZone = "Europe/Rome";
   i18n = {
     defaultLocale = "en_US.UTF-8";
-    supportedLocales = [
-      "en_US.UTF-8/UTF-8"
-      "it_IT.UTF-8/UTF-8"
-    ];
+    supportedLocales = [ "en_US.UTF-8/UTF-8" "it_IT.UTF-8/UTF-8" ];
     extraLocaleSettings = {
       LC_ADDRESS = "it_IT.UTF-8";
       LC_IDENTIFICATION = "it_IT.UTF-8";
@@ -137,44 +141,11 @@
       description = "zima";
       extraGroups = [ "wheel" ];
       shell = pkgs.zsh;
-      hashedPassword = "$6$5gYC2ZrWG.OHl0q4$DvISykmVofwrst9BBtFPw3wDFPBa0marCybZMP42a4YJIJGCCL9c4WLM56Pv1.5V1oO5/8eLRwyVtV3aO1pxk1";
+      hashedPassword =
+        "$6$5gYC2ZrWG.OHl0q4$DvISykmVofwrst9BBtFPw3wDFPBa0marCybZMP42a4YJIJGCCL9c4WLM56Pv1.5V1oO5/8eLRwyVtV3aO1pxk1";
       openssh.authorizedKeys.keys = [
         "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDAqgfcNv5MLfj2+2f7UGB7yu4d7NwPNxxNdINwOATFGzW+w15yOimWneGbUKaAX+YV9fyebpX7CinsvEbHIyQVMw32e6CEW9lDtFtlTQLIYbKYglIDgaris1hZxkvYKUG3FgFYxDqG5yKVB9G3/uPBl8CAMAmYBPu2d+YGqmVw/NT31kWqfbBFyIsQq/PdxP1S0kx9ng1GfCVsfqTGJ9SNZIp2jTFHnIckp7hajJSDzucNVygfHApkQrA4jJ9RSzDZ/XWtlK3XFf0WE5qqsW6qhkJ47BI438vhYXz8y8b9X7qqGwoMIzY3Z+uS6/kVgvUXiHlslB8Xt1WzW2mFi7yH29gzThwqm5A/Noo6W7K++FBaMWZBkSO7naw02b/SRtyjeiiwkvsNv4+Iwyiwr/DCinz6IgngRvLEkOJcMCQ0Mert/VH8VK8AANqKrSmREQM8164gQHFyavOz7c2GGDOyWbIv9lWXjvjN5jxlFw8IErWMnqv/TqIo998yykeEGTE="
       ];
-    };
-
-    groups.podmanager = {};
-    users.podmanager = {
-      isSystemUser = true;
-      group = "podmanager";
-      home = "/home/podmanager";
-      createHome = true;
-      description = "User for running podman containers";
-    };
-  };
-
-  # Podman instead of Docker for reduced storage requirements
-  virtualisation = {
-    podman = {
-      enable = true;
-
-      # Enable Docker compatibility
-      dockerCompat = true;
-
-      # Reduce storage usage
-      autoPrune = {
-        enable = true;
-        dates = "daily";
-        flags = ["--all"];
-      };
-
-      # Required for containers under podman-compose to be able to talk to each other.
-      defaultNetwork.settings.dns_enabled = true;
-
-      # Default to overlayfs storage for better efficiency
-      defaultNetwork.settings.driver = "bridge";
-
-      extraPackages = [ pkgs.cni-plugins ];
     };
   };
 
@@ -207,13 +178,16 @@
       bantime = "24h"; # Ban IPs for one day on the first ban
       bantime-increment = {
         enable = true; # Enable increment of bantime after each violation
-        formula = "ban.Time * math.exp(float(ban.Count+1)*banFactor)/math.exp(1*banFactor)";
+        formula =
+          "ban.Time * math.exp(float(ban.Count+1)*banFactor)/math.exp(1*banFactor)";
         maxtime = "168h"; # Do not ban for more than 1 week
         overalljails = true; # Calculate the bantime based on all the violations
       };
       ignoreIP = [
         # Whitelist some subnets
-        "10.0.0.0/8" "172.16.0.0/12" "192.168.0.0/16"
+        "10.0.0.0/8"
+        "172.16.0.0/12"
+        "192.168.0.0/16"
         "8.8.8.8" # whitelist a specific IP
         "nixos.wiki" # resolve the IP via DNS
       ];
@@ -251,7 +225,7 @@
       auto-optimise-store = true;
       trusted-users = [ "root" "admin" "@wheel" ];
       # Keep the store small
-      min-free = 64000000;  # 64MB minimum free
+      min-free = 64000000; # 64MB minimum free
     };
 
     gc = {
@@ -261,12 +235,12 @@
     };
 
     # Enable flakes
-    settings.experimental-features = ["nix-command" "flakes"];
+    settings.experimental-features = [ "nix-command" "flakes" ];
 
     # Optimize storage usage
     optimise = {
       automatic = true;
-      dates = ["weekly"];
+      dates = [ "weekly" ];
     };
   };
 
@@ -315,16 +289,7 @@
   };
 
   # Clean /tmp regularly
-  systemd.tmpfiles.rules = [
-    "d /tmp 1777 root root 1d"
-  ];
-
-  imports = [
-    ./services/rathole.nix
-    ./services/wireguard.nix
-    ./services/cloudflared.nix
-    ../../modules/monitoring.nix
-  ];
+  systemd.tmpfiles.rules = [ "d /tmp 1777 root root 1d" ];
 
   # Important: Version marker
   system.stateVersion = "23.11"; # Use a stable version

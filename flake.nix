@@ -21,56 +21,90 @@
     };
   };
 
-  outputs = { nixpkgs, sops-nix, disko, home-manager, ... }:
-    let
-      system = "x86_64-linux";
-    in {
-      nixosConfigurations = {
-        provisioning = nixpkgs.lib.nixosSystem {
-          inherit system;
-          modules = [
-            disko.nixosModules.disko
-            ./hosts/generic/disk-configuration.nix
-            sops-nix.nixosModules.sops
-            ./hosts/generic/default.nix
-            home-manager.nixosModules.home-manager
-            ./hosts/generic/home.nix
-          ];
-        };
+  outputs = { self, nixpkgs, sops-nix, disko, home-manager, ... }@inputs: {
+    nixosConfigurations = {
 
-        server = nixpkgs.lib.nixosSystem {
-          inherit system;
-          modules = [
-            sops-nix.nixosModules.sops
-            ./hosts/generic/default.nix
-            ./hosts/generic/hardware-configuration.nix
-            home-manager.nixosModules.home-manager
-            ./hosts/generic/home.nix
-          ];
-        };
+      genericServer = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = { inherit inputs; };
+        modules = [
+          ./hosts/generic/default.nix
+          disko.nixosModules.disko
+          ./hosts/generic/disk-configuration.nix
+          home-manager.nixosModules.home-manager
+          ./hosts/generic/home.nix
+          ./profiles/dokploy.nix
+        ];
+      };
 
-        zimablade-provisioning = nixpkgs.lib.nixosSystem {
-          inherit system;
-          modules = [
-            disko.nixosModules.disko
-            ./hosts/zimablade/disk-configuration.nix
-            sops-nix.nixosModules.sops
-            ./hosts/zimablade/default.nix
-            home-manager.nixosModules.home-manager
-            ./hosts/zimablade/home.nix
-          ];
-        };
+      kubernetesDev = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = { inherit inputs; };
+        modules = [
+          ./hosts/generic/default.nix
+          disko.nixosModules.disko
+          ./hosts/generic/disk-configuration.nix
+          home-manager.nixosModules.home-manager
+          ./hosts/generic/home.nix
+          ./profiles/kubernetes-dev.nix
+        ];
+      };
 
-        zimablade = nixpkgs.lib.nixosSystem {
-          inherit system;
-          modules = [
-            sops-nix.nixosModules.sops
-            ./hosts/zimablade/default.nix
-            ./hosts/zimablade/hardware-configuration.nix
-            home-manager.nixosModules.home-manager
-            ./hosts/zimablade/home.nix
-          ];
-        };
+      zimablade = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = { inherit inputs; };
+        modules = [
+          sops-nix.nixosModules.sops
+          ./hosts/zimablade/default.nix
+          disko.nixosModules.disko
+          ./hosts/zimablade/disk-configuration.nix
+          home-manager.nixosModules.home-manager
+          ./hosts/zimablade/home.nix
+        ];
       };
     };
+
+    packages.x86_64-linux = {
+
+      kubernetesImage = (nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = { inherit inputs; };
+        modules = [
+          ./hosts/generic/default.nix
+          disko.nixosModules.disko
+          ./hosts/generic/disk-configuration.nix
+          home-manager.nixosModules.home-manager
+          ./hosts/generic/home.nix
+          ./profiles/kubernetes-dev.nix
+          ({ ... }: {
+            disko.devices.disk.main = {
+              imageSize = "4G";
+              imageName = "kube";
+            };
+            boot.loader.timeout = 15;
+          })
+        ];
+      }).config.system.build.diskoImagesScript;
+
+      genericImage = (nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = { inherit inputs; };
+        modules = [
+          ./hosts/generic/default.nix
+          disko.nixosModules.disko
+          ./hosts/generic/disk-configuration.nix
+          home-manager.nixosModules.home-manager
+          ./hosts/generic/home.nix
+          ./profiles/dokploy.nix
+          ({ ... }: {
+            disko.devices.disk.main = {
+              imageSize = "4G";
+              imageName = "generic";
+            };
+            boot.loader.timeout = 15;
+          })
+        ];
+      }).config.system.build.diskoImagesScript;
+    };
+  };
 }
