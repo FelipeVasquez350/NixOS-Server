@@ -37,10 +37,9 @@
   };
 
   imports = [
-    ../../modules/services/rathole.nix
-    ../../modules/services/wireguard.nix
-    ../../modules/services/cloudflared.nix
-    ../../modules/monitoring.nix
+    ../modules/services/rathole.nix
+    ../modules/services/wireguard.nix
+    ../modules/services/cloudflared.nix
+    ../modules/monitoring.nix
   ];
-
 }

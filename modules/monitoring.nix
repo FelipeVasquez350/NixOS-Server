@@ -1,5 +1,4 @@
-{ config,... }:
-{
+{ ... }: {
   imports = [
     ./services/loki.nix
     ./services/promtail.nix

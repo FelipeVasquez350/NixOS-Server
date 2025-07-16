@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ lib, pkgs, config, ... }:
 
 {
   # Bootloader with minimal generation retention
@@ -12,12 +12,6 @@
       efi.canTouchEfiVariables = true;
     };
 
-    # Minimal kernel
-    kernelPackages = pkgs.linuxPackages_hardened;
-
-    # Only support essential filesystems
-    supportedFilesystems = [ "vfat" "ext4" ];
-
     # Enable tmpfs for /tmp
     tmp = {
       tmpfsSize = "256M";
@@ -28,19 +22,33 @@
     initrd = {
       includeDefaultModules = false;
       availableKernelModules = [
-        "ata_piix"
+        "ahci" # PCI bus support
+        "xhci_pci"
+        "ata_piix" # ATA disk support
         "uhci_hcd"
-        "virtio_pci"
-        "virtio_scsi"
-        "sd_mod"
-        "sr_mod"
+        "virtio_pci" # VM PCI bus support
+        "virtio_blk" # VM disk support
+        "virtio_scsi" # VM SCSI support
+        "sd_mod" # SCSI disk support
+        "sr_mod" # SCSI CD-ROM support
         "mmc_block"
         "sdhci"
         "sdhci_pci"
       ];
-      kernelModules = [ "mmc_block" ];
+      kernelModules = [ "kvm-intel" "mmc_block" ];
     };
+
+    # Minimal kernel
+    kernelPackages = pkgs.linuxPackages_hardened;
+
+    # Only support essential filesystems
+    supportedFilesystems = [ "vfat" "ext4" ];
+
   };
+
+  # Zimablade CPU firmware
+  hardware.cpu.intel.updateMicrocode =
+    lib.mkDefault config.hardware.enableRedistributableFirmware;
 
   # Optimize filesystems for storage efficiency
   fileSystems = {
@@ -87,27 +95,27 @@
     };
   };
 
-  systemd.network = {
-    enable = true;
+  # systemd.network = {
+  #   enable = true;
 
-    # Universal DHCP fallback for your primary interface
-    networks."10-dhcp" = {
-      matchConfig = {
-        Name = "enp2s0"; # Your ethernet interface
-      };
-      networkConfig = {
-        DHCP = "yes";
-        # Let DHCP set everything including gateway
-        # No static addressing
-      };
-      # Use these if you need DHCP to behave in specific ways
-      dhcpV4Config = {
-        UseDNS = true;
-        UseRoutes = true; # Let DHCP provide the routes
-        SendHostname = true;
-      };
-    };
-  };
+  #   # Universal DHCP fallback for your primary interface
+  #   networks."10-dhcp" = {
+  #     matchConfig = {
+  #       Name = "enp2s0"; # Your ethernet interface
+  #     };
+  #     networkConfig = {
+  #       DHCP = "yes";
+  #       # Let DHCP set everything including gateway
+  #       # No static addressing
+  #     };
+  #     # Use these if you need DHCP to behave in specific ways
+  #     dhcpV4Config = {
+  #       UseDNS = true;
+  #       UseRoutes = true; # Let DHCP provide the routes
+  #       SendHostname = true;
+  #     };
+  #   };
+  # };
 
   # Time and locale
   time.timeZone = "Europe/Rome";
@@ -223,7 +231,7 @@
   nix = {
     settings = {
       auto-optimise-store = true;
-      trusted-users = [ "root" "admin" "@wheel" ];
+      trusted-users = [ "admin" "@wheel" ];
       # Keep the store small
       min-free = 64000000; # 64MB minimum free
     };
@@ -265,7 +273,7 @@
   # Allow unfree packages if needed
   nixpkgs.config.allowUnfree = true;
 
-  # Minimal system packages - extremely limited
+  # Minimal system packages
   environment = {
     systemPackages = with pkgs; [
       btop
@@ -274,6 +282,7 @@
       fzf
       git
       stow
+      tmux
       vim
       wget
       zoxide
@@ -292,5 +301,5 @@
   systemd.tmpfiles.rules = [ "d /tmp 1777 root root 1d" ];
 
   # Important: Version marker
-  system.stateVersion = "23.11"; # Use a stable version
+  system.stateVersion = "24.11"; # Use a stable version
 }

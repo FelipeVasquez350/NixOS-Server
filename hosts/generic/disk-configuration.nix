@@ -1,9 +1,9 @@
-{ lib, config, ... }: {
+{ lib, ... }: {
 
   # Enable automatic partition resizing for VM environments
   # This will grow the root partition to fill available space
   boot.growPartition = true;
-  
+
   # File system-specific auto-resize configuration
   fileSystems."/".autoResize = true;
   fileSystems."/home".autoResize = true;

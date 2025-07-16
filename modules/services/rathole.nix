@@ -3,24 +3,23 @@
 let
   # Define the rathole config directory
   ratholeConfigDir = "/home/podmanager/rathole";
-in
-{
+in {
   virtualisation.oci-containers = {
     backend = "podman";
     containers = {
       rathole-server = {
-        image = "rapiz1/rathole:latest"; # https://hub.docker.com/r/rapiz1/rathole
-        user = "1000:1000";  # Typical first user ID, adjust if needed
+        image =
+          "rapiz1/rathole:latest"; # https://hub.docker.com/r/rapiz1/rathole
+        user = "1000:1000"; # Typical first user ID, adjust if needed
         # Mount the configuration file from the specified location
-        volumes = [
-          "${ratholeConfigDir}/server.toml:/etc/rathole/server.toml:ro"
-        ];
+        volumes =
+          [ "${ratholeConfigDir}/server.toml:/etc/rathole/server.toml:ro" ];
         # Command to run rathole with the server config
         cmd = [ "--server" "/etc/rathole/server.toml" ];
         # Expose the necessary ports
-        ports =  [
-          "5000:5000"   # Control channel (from your config)
-          "7777:7777"   # Generic
+        ports = [
+          "5000:5000" # Control channel (from your config)
+          "7777:7777" # Generic
           "25535:25535" # Minecraft
           "27015:27015" # Factorio TCP
           "34197:34197" # Factorio UDP
@@ -39,7 +38,7 @@ in
       mkdir -p ${ratholeConfigDir}
 
       # Copy the base config file
-      cp -f ${../../../config/server.toml} ${ratholeConfigDir}/server.toml.tmp
+      cp -f ${../../config/server.toml} ${ratholeConfigDir}/server.toml.tmp
 
       # Replace the default token with the secret token
       token=$(cat ${config.sops.secrets.rathole_token.path})
@@ -68,11 +67,11 @@ in
   # Make sure the firewall allows the needed ports from your config
   networking.firewall = {
     allowedTCPPorts = [
-      5000   # Rathole control channel
-      7777   # Generic port
-      25535  # Minecraft port
-      27015  # Factorio TCP port
-      34197  # Factorio UDP port
+      5000 # Rathole control channel
+      7777 # Generic port
+      25535 # Minecraft port
+      27015 # Factorio TCP port
+      34197 # Factorio UDP port
     ];
   };
 }

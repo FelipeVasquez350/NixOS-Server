@@ -1,22 +1,14 @@
-{ config, lib, modulesPath, ... }:
-{
-  imports =
-    [ (modulesPath + "/installer/scan/not-detected.nix")
-    ];
+{ lib, ... }: {
 
-  # Hardware-specific modules from the hardware-configuration.nix
-  boot.initrd.availableKernelModules = [ "ahci" "xhci_pci" "sdhci_pci" ];
-  boot.initrd.kernelModules = [ ];
-  boot.kernelModules = [ "kvm-intel" ];
-  boot.extraModulePackages = [ ];
+  # Enable automatic partition resizing for VM environments
+  # This will grow the root partition to fill available space
+  boot.growPartition = true;
 
-  # CPU-specific settings
-  nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
-  hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+  # File system-specific auto-resize configuration
+  fileSystems."/".autoResize = true;
 
-  # Disko configuration
   disko.devices = {
-    disk.main = {
+    disk.mmcblk0 = {
       device = lib.mkDefault "/dev/mmcblk0";
       type = "disk";
       content = {
@@ -41,7 +33,7 @@
               type = "filesystem";
               format = "ext4";
               mountpoint = "/";
-              extraArgs = ["-E" "nodiscard"];
+              extraArgs = [ "-E" "nodiscard" ];
               mountOptions = [ "defaults" "noatime" ];
             };
           };
@@ -49,7 +41,4 @@
       };
     };
   };
-
-  # No swap devices
-  swapDevices = [ ];
 }

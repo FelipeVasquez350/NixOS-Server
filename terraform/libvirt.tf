@@ -30,6 +30,27 @@ resource "libvirt_network" "vm_network" {
   dns {
     enabled = true
   }
+
+  # Add DHCP static host binding using XML customization
+  xml {
+    xslt = <<-XSLT
+    <?xml version="1.0" ?>
+    <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+      <xsl:output omit-xml-declaration="yes" indent="yes"/>
+      <xsl:template match="@*|node()">
+        <xsl:copy>
+          <xsl:apply-templates select="@*|node()"/>
+        </xsl:copy>
+      </xsl:template>
+      <xsl:template match="/network/ip/dhcp">
+        <dhcp>
+          <xsl:apply-templates select="@*|node()"/>
+          <host mac="52:54:00:${format("%02x", parseint(substr(sha256("${var.environment}-${local.host_to_use}-1"), 0, 2), 16) % 256)}:${format("%02x", parseint(substr(sha256("${var.environment}-${local.host_to_use}-2"), 0, 2), 16) % 256)}:${format("%02x", parseint(substr(sha256("${var.environment}-${local.host_to_use}-3"), 0, 2), 16) % 256)}" ip="${local.vm_ip_address}" name="${var.environment}-${local.host_to_use}"/>
+        </dhcp>
+      </xsl:template>
+    </xsl:stylesheet>
+    XSLT
+  }
 }
 
 resource "libvirt_volume" "vm_volume" {
@@ -46,10 +67,10 @@ variable "ovmf_code_path" {
   type        = string
   # On NixOS, using system-level symlink that persists across updates
   # default = "/run/current-system/sw/share/qemu/edk2-x86_64-secure-code.fd"
-  default = "/run/libvirt/nix-ovmf/OVMF_CODE.fd"
+  # default = "/run/libvirt/nix-ovmf/OVMF_CODE.fd"
 
   # On Arch Linux
-  # default     = "/usr/share/OVMF/x64/OVMF_CODE.4m.fd"
+  default     = "/usr/share/OVMF/x64/OVMF_CODE.4m.fd"
 }
 
 variable "nvram_store_dir" {
@@ -63,10 +84,10 @@ variable "ovmf_vars_template_path" {
   type        = string
   # On NixOS, using system-level symlink that persists across updates
   # default = "/run/current-system/sw/share/qemu/edk2-i386-vars.fd"
-  default = "/run/libvirt/nix-ovmf/OVMF_VARS.fd"
+  # default = "/run/libvirt/nix-ovmf/OVMF_VARS.fd"
 
   # On Arch Linux
-  # default     = "/usr/share/OVMF/x64/OVMF_VARS.4m.fd"
+  default     = "/usr/share/OVMF/x64/OVMF_VARS.4m.fd"
 }
 
 resource "libvirt_domain" "vm" {
@@ -110,22 +131,40 @@ resource "libvirt_domain" "vm" {
           <boot dev="hd"/>
         </os>
       </xsl:template>
+      <xsl:template match="/domain">
+        <domain>
+          <xsl:apply-templates select="@*"/>
+          <xsl:apply-templates select="*[not(self::cpu)]"/>
+          <cpu mode="custom" match="exact" check="none">
+            <model fallback='forbid'>qemu64</model>
+            <feature policy="require" name="sse4.2"/>
+          </cpu>
+        </domain>
+      </xsl:template>
     </xsl:stylesheet>
     XSLT
   }
 
+
   lifecycle {
     ignore_changes = [
       nvram,
+      network_interface[0].wait_for_lease,
+      network_interface[0].addresses,
     ]
   }
   # Use autostart for the VM
-  autostart = true
+  autostart = false
 
   network_interface {
     network_name   = "${var.libvirt_network_name}_${terraform.workspace}"
-    wait_for_lease = false
+    wait_for_lease = true
     addresses      = [local.vm_ip_address]
+    mac            = format("52:54:00:%02x:%02x:%02x",
+      parseint(substr(sha256("${var.environment}-${each.key}-mac-1"), 0, 2), 16) % 256,
+      parseint(substr(sha256("${var.environment}-${each.key}-mac-2"), 0, 2), 16) % 256,
+      parseint(substr(sha256("${var.environment}-${each.key}-mac-3"), 0, 2), 16) % 256
+    )
   }
 
   # Disk configuration

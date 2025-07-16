@@ -50,6 +50,15 @@ variable "hosts_config" {
         disk_size_gb       = 40
         username           = "admin"
         flake_attribute    = "kubernetesImage"
+      },
+      "zimablade" = {
+        ip_address         = "192.168.100.222"
+        build_image_source = "../zimablade.raw"
+        cpu_cores          = 2
+        memory_mb          = 8192
+        disk_size_gb       = 32
+        username           = "admin"
+        flake_attribute    = "zimablade"
       }
     },
   }

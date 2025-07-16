@@ -60,11 +60,31 @@
           ./hosts/zimablade/disk-configuration.nix
           home-manager.nixosModules.home-manager
           ./hosts/zimablade/home.nix
+          ./profiles/zima.nix
         ];
       };
     };
 
     packages.x86_64-linux = {
+      genericImage = (nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = { inherit inputs; };
+        modules = [
+          ./hosts/generic/default.nix
+          disko.nixosModules.disko
+          ./hosts/generic/disk-configuration.nix
+          home-manager.nixosModules.home-manager
+          ./hosts/generic/home.nix
+          ./profiles/dokploy.nix
+          ({ ... }: {
+            disko.devices.disk.main = {
+              imageSize = "4G";
+              imageName = "generic";
+            };
+            boot.loader.timeout = 15;
+          })
+        ];
+      }).config.system.build.diskoImagesScript;
 
       kubernetesImage = (nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
@@ -86,20 +106,21 @@
         ];
       }).config.system.build.diskoImagesScript;
 
-      genericImage = (nixpkgs.lib.nixosSystem {
+      zimablade = (nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         specialArgs = { inherit inputs; };
         modules = [
-          ./hosts/generic/default.nix
+          sops-nix.nixosModules.sops
+          ./hosts/zimablade/default.nix
           disko.nixosModules.disko
-          ./hosts/generic/disk-configuration.nix
+          ./hosts/zimablade/disk-configuration.nix
           home-manager.nixosModules.home-manager
-          ./hosts/generic/home.nix
-          ./profiles/dokploy.nix
+          ./hosts/zimablade/home.nix
+          ./profiles/zima.nix
           ({ ... }: {
-            disko.devices.disk.main = {
+            disko.devices.disk.mmcblk0 = {
               imageSize = "4G";
-              imageName = "generic";
+              imageName = "zimablade";
             };
             boot.loader.timeout = 15;
           })

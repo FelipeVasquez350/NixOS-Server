@@ -1,7 +1,7 @@
-{ config, lib, pkgs, ... }:
+{ config, pkgs, ... }:
 
 {
-  users.groups.cloudflared = {};
+  users.groups.cloudflared = { };
   users.users.cloudflared = {
     isSystemUser = true;
     group = "cloudflared";
@@ -13,8 +13,8 @@
   #https://github.com/quic-go/quic-go/wiki/UDP-Buffer-Sizes
   boot.kernel.sysctl = {
     # UDP buffer size parameters
-    "net.core.rmem_max" = 8388608;        # 8MB max receive buffer
-    "net.core.wmem_max" = 8388608;        # 8MB max send buffer
+    "net.core.rmem_max" = 8388608; # 8MB max receive buffer
+    "net.core.wmem_max" = 8388608; # 8MB max send buffer
   };
 
   environment.systemPackages = with pkgs; [ cloudflared ];

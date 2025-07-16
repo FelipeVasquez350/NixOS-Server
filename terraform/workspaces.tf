@@ -12,9 +12,10 @@ locals {
 
   # Network subnet calculation - use unique subnet based on workspace name
   workspace_subnet = (
-    terraform.workspace == "default" ? "100" :
+    terraform.workspace == "default" ? "99" :
     terraform.workspace == "generic" ? "101" :
     terraform.workspace == "kube" ? "102" :
+    terraform.workspace == "kube" ? "100" :
     "110"
   )
 

@@ -1,7 +1,3 @@
-# Edit this configuration file to define what should be installed on
-# your system.  Help is available in the configuration.nix(5) man page
-# and in the NixOS manual (accessible by running ‘nixos-help’).
-
 { pkgs, lib, ... }:
 
 {
@@ -34,7 +30,7 @@
   };
 
   networking = {
-    hostName = "nixos"; # Define your hostname.
+    hostName = lib.mkDefault "nixos"; # Define your hostname.
 
     useDHCP = lib.mkForce true;
     nameservers = [ "8.8.8.8" "8.8.4.4" ];
@@ -193,10 +189,20 @@
       htop
       nmap
       stow
+      tmux
       vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
       wget
       zoxide
     ];
+  };
+
+  # Configure fonts
+  fonts = {
+    packages = with pkgs; [ nerd-fonts.jetbrains-mono ];
+
+    fontconfig = {
+      defaultFonts = { monospace = [ "JetBrainsMono Nerd Font" ]; };
+    };
   };
 
   system.stateVersion = "24.11";

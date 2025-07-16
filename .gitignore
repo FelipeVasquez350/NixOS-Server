@@ -5,3 +5,4 @@ build
 .terraform.lock.hcl
 *.log
 *.raw
+terraform.tfstate.d
